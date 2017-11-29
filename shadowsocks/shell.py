@@ -100,6 +100,7 @@ def find_config():
         return config_path
     return None
 
+
 def find_custom_detect():
     config_path = 'user-detect.html'
     if os.path.exists(config_path):
@@ -147,6 +148,10 @@ def check_config(config, is_local):
     if config.get('server', '') in ['127.0.0.1', 'localhost']:
         logging.warn('warning: server set to listen on %s:%s, are you sure?' %
                      (to_str(config['server']), config['server_port']))
+
+    if 'block_hostname_list' in config and not isinstance(config['block_hostname_list'], list):
+        config['block_hostname_list'] = []
+        
     if config.get('timeout', 300) < 100:
         logging.warn('warning: your timeout %d seems too short' %
                      int(config.get('timeout')))
@@ -203,7 +208,6 @@ def get_config(is_local):
             config['detect_block_html'] = ''
             with open(detect_path, 'rb') as f:
                 config['detect_block_html'] = bytes(f.read())
-
 
         v_count = 0
         for key, value in optlist:
@@ -306,7 +310,8 @@ def get_config(is_local):
         config['server'] = to_str(config.get('server', '0.0.0.0'))
         try:
             config['ignore_bind'] = \
-                IPNetwork(config.get('ignore_bind', '127.0.0.0/8,::1/128,10.0.0.0/8,192.168.0.0/16'))
+                IPNetwork(config.get('ignore_bind',
+                                     '127.0.0.0/8,::1/128,10.0.0.0/8,192.168.0.0/16'))
         except Exception as e:
             logging.error(e)
             sys.exit(2)

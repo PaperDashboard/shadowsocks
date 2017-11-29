@@ -71,6 +71,7 @@ def load_libsodium(crypto_path=None):
         c_char_p, c_ulonglong,
         c_char_p
     )
+
     if hasattr(libsodium, 'crypto_stream_xchacha20_xor_ic'):
         libsodium.crypto_stream_xchacha20_xor_ic.restype = c_int
         libsodium.crypto_stream_xchacha20_xor_ic.argtypes = (
@@ -186,6 +187,7 @@ class SodiumCrypto(object):
                 self.cipher = libsodium.crypto_stream_xchacha20_xor_ic
             else:
                 raise Exception('Unsupported cipher')
+
         elif cipher_name == 'chacha20-ietf':
             self.cipher = libsodium.crypto_stream_chacha20_ietf_xor_ic
         else:
@@ -258,6 +260,10 @@ class SodiumAeadCrypto(AeadCryptoBase):
                 self.decryptor = libsodium.crypto_aead_aes256gcm_decrypt
             else:
                 raise Exception('Unsupported cipher')
+        elif cipher_name == 'xchacha20':
+            self.cipher = libsodium.crypto_stream_xchacha20_xor_ic
+        elif cipher_name == 'xsalsa20':
+            self.cipher = libsodium.crypto_stream_xsalsa20_xor_ic
         else:
             raise Exception('Unknown cipher')
 
@@ -319,6 +325,7 @@ ciphers = {
     'salsa20': (32, 8, SodiumCrypto),
     'chacha20': (32, 8, SodiumCrypto),
     'xchacha20': (32, 24, SodiumCrypto),
+    'xsalsa20': (32, 24, SodiumCrypto),
     'chacha20-ietf': (32, 12, SodiumCrypto),
     # AEAD: iv_len = salt_len = key_len
     'chacha20-poly1305': (32, 32, SodiumAeadCrypto),

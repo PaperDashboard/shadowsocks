@@ -272,7 +272,7 @@ class TCPRelayHandler(object):
     def _create_encryptor(self, config):
         try:
             self._encryptor = encrypt.Encryptor(config['password'],
-                                                config['method'])
+                                                config['method'], None, None, True)
             return True
         except Exception:
             self._stage = STAGE_DESTROYED
@@ -1674,7 +1674,9 @@ class TCPRelayHandler(object):
         if self._protocol:
             self._protocol.dispose()
             self._protocol = None
-        self._encryptor = None
+        if self._encryptor:
+            self._encryptor.dispose()
+            self._encryptor = None
         self._dns_resolver.remove_callback(self._handle_dns_resolved)
         self._server.remove_handler(self)
         if self._add_ref > 0:

@@ -22,7 +22,7 @@ import sys
 import hashlib
 import logging
 
-from shadowsocks import common
+from shadowsocks import common. lru_cache
 from shadowsocks.crypto import rc4_md5, openssl, sodium, table
 
 
@@ -43,14 +43,14 @@ method_supported.update(table.ciphers)
 def random_string(length):
     return os.urandom(length)
 
-cached_keys = {}
+cached_keys = lru_cache.LRUCache(timeout=180)
 
 
 def try_cipher(key, method=None, crypto_path=None):
     Encryptor(key, method, crypto_path)
 
 
-def EVP_BytesToKey(password, key_len, iv_len):
+def EVP_BytesToKey(password, key_len, iv_len, cache):
     # equivalent to OpenSSL's EVP_BytesToKey() with count 1
     # so that we make the same key and iv as nodejs version
     cached_key = '%s-%d-%d' % (password, key_len, iv_len)
@@ -70,12 +70,14 @@ def EVP_BytesToKey(password, key_len, iv_len):
     ms = b''.join(m)
     key = ms[:key_len]
     iv = ms[key_len:key_len + iv_len]
-    cached_keys[cached_key] = (key, iv)
+    if cache:
+        cached_keys[cached_key] = (key, iv)
+        cached_keys.sweep()
     return key, iv
 
 
 class Encryptor(object):
-    def __init__(self, password, method, crypto_path=None, iv=None):
+    def __init__(self, password, method, crypto_path=None, iv=None, cache=False):
         """
         Crypto wrapper
         :param password: str cipher password
@@ -89,6 +91,7 @@ class Encryptor(object):
         self.iv_sent = False
         self.cipher_iv = b''
         self.decipher = None
+        self.cache = cache
         self.decipher_iv = None
         self.crypto_path = crypto_path
         method = method.lower()
@@ -121,7 +124,8 @@ class Encryptor(object):
         if m[METHOD_INFO_KEY_LEN] > 0:
             key, _ = EVP_BytesToKey(password,
                                     m[METHOD_INFO_KEY_LEN],
-                                    m[METHOD_INFO_IV_LEN])
+                                    m[METHOD_INFO_IV_LEN],
+                                    self.cache)
         else:
             # key_length == 0 indicates we should use the key directly
             key, iv = password, b''
@@ -134,6 +138,9 @@ class Encryptor(object):
 
     def encrypt(self, buf):
         if len(buf) == 0:
+            if not self.iv_sent:
+                self.iv_sent = True
+                return self.cipher_iv
             return buf
         if self.iv_sent:
             return self.cipher.encrypt(buf)
@@ -157,7 +164,11 @@ class Encryptor(object):
             if len(buf) == 0:
                 return buf
         return self.decipher.decrypt(buf)
-
+    
+    def dispose(self):
+        if self.decipher is not None:
+            self.decipher.clean()
+            self.decipher = None
 
 def gen_key_iv(password, method):
     method = method.lower()
@@ -165,7 +176,7 @@ def gen_key_iv(password, method):
         raise Exception('method not supported')
     (key_len, iv_len, m) = method_supported[method]
     if key_len > 0:
-        key, _ = EVP_BytesToKey(password, key_len, iv_len)
+        key, _ = EVP_BytesToKey(password, key_len, iv_len, True)
     else:
         key = password
     iv = random_string(iv_len)
@@ -206,7 +217,7 @@ def encrypt_key(password, method):
         raise Exception('method not supported')
     (key_len, iv_len, m) = method_supported[method]
     if key_len > 0:
-        key, _ = EVP_BytesToKey(password, key_len, iv_len)
+        key, _ = EVP_BytesToKey(password, key_len, iv_len, True)
     else:
         key = password
     return key
