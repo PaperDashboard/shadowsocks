@@ -267,13 +267,24 @@ STATUS_IPV6 = 1
 
 class DNSResolver(object):
 
-    def __init__(self):
+    def __init__(self, block_hostname_list=None):
         self._loop = None
         self._hosts = {}
         self._hostname_status = {}
         self._hostname_to_cb = {}
         self._cb_to_hostname = {}
         self._cache = lru_cache.LRUCache(timeout=300)
+        
+        # block hostname
+        if type(block_hostname_list) != list:
+            self._block_hostname_list = []
+        else:
+            self._block_hostname_list = list(map(
+                lambda t: if type(t) == bytes else t.encode('utf-8'),
+                block_hostname_list
+            ))
+        logging.info("block_hostname_list is as: " + str(self._block_hostname_list))
+
         self._sock = None
         self._servers = None
         self._parse_resolv()
@@ -462,9 +473,11 @@ class DNSResolver(object):
             ip = self._hosts[hostname]
             callback((hostname, ip), None)
         elif hostname in self._cache:
-            logging.debug('hit cache: %s', hostname)
+            logging.debug('hit cache: %s', self._cache[hostname])
             ip = self._cache[hostname]
             callback((hostname, ip), None)
+        elif any(hostname.endswith(t) for t in self._block_hostname_list):
+            callback(None, Exception("hostname <{}> is been blocked".format(hostname)))
         else:
             if not is_valid_hostname(hostname):
                 callback(None, Exception('invalid hostname: %s' % hostname))
