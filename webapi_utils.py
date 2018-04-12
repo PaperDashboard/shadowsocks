@@ -21,14 +21,12 @@ class WebApi(object):
                 (get_config().WEBAPI_URL, uri),
                 params=uri_params,
                 timeout=10)
-            try:
-                data = res.json()
-            except Exception:
-                if res:
-                    logging.error("Error data:%s" % (res.text))
+            data = res.json()
+            
             if data['ret'] == 0:
                 logging.error("Error data:%s" % (res.text))
                 logging.error("request %s error!wrong ret!"%(uri))
+                raise Exception("err ret")
             return data['data']
         except Exception:
             import traceback
@@ -49,14 +47,11 @@ class WebApi(object):
                 params=uri_params,
                 json=raw_data,
                 timeout=10)
-            try:
-                data = res.json()
-            except Exception:
-                if res:
-                    logging.error("Error data:%s" % (res.text))
+            data = res.json()
             if data['ret'] == 0:
                 logging.error("Error data:%s" % (res.text))
                 logging.error("request %s error!wrong ret!"%(uri))
+                raise Exception("err ret")
             return data['data']
         except Exception:
             import traceback
