@@ -37,6 +37,7 @@ class WebApi(object):
             trace = traceback.format_exc()
             logging.error(trace)
             raise Exception('network issue or server error!')
+            return []
 
 
     def postApi(self, uri, params={}, raw_data={}):
@@ -67,3 +68,4 @@ class WebApi(object):
             trace = traceback.format_exc()
             logging.error(trace)
             raise Exception('network issue or server error!')
+            return []
