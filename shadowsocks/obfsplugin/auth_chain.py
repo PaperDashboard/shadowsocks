@@ -62,7 +62,7 @@ def create_auth_chain_e(method):
 
 
 def create_auth_chain_f(method):
-return auth_chain_f(method)
+    return auth_chain_f(method)
 
 obfs_map = {
         'auth_chain_a': (create_auth_chain_a,),
