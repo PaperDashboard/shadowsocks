@@ -22,7 +22,7 @@ import sys
 import hashlib
 import logging
 
-from shadowsocks import common. lru_cache
+from shadowsocks import common, lru_cache
 from shadowsocks.crypto import rc4_md5, openssl, sodium, table
 
 
