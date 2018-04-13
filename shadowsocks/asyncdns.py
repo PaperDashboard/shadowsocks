@@ -279,10 +279,11 @@ class DNSResolver(object):
         if type(block_hostname_list) != list:
             self._block_hostname_list = []
         else:
-            self._block_hostname_list = list(map(
-                lambda t: if type(t) == bytes else t.encode('utf-8'),
-                block_hostname_list
-            ))
+            self._block_hostname_list = []
+            for item in block_hostname_list:
+                if type(item) != btyes:
+                    item = item.encode('utf-8')
+                self._block_hostname_list.appemd(item)
         logging.info("block_hostname_list is as: " + str(self._block_hostname_list))
 
         self._sock = None
