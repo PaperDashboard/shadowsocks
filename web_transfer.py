@@ -242,7 +242,7 @@ class WebTransfer(object):
 
         self.detect_text_list = {}
         self.detect_hex_list = {}
-        data = webapi.getApi('func/detect_rules')
+        data = webapi.getApi('func/detect_rules', {'node_id': get_config().NODE_ID})
         for rule in data:
             d = {}
             d['id'] = int(rule['id'])
