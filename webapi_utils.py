@@ -21,8 +21,8 @@ class WebApi(object):
                 (get_config().WEBAPI_URL, uri),
                 params=uri_params,
                 timeout=10)
-            data = res.json()
             print(res.data)
+            data = res.json()
             
             if data['ret'] == 0:
                 logging.error("Error data:%s" % (res.text))
@@ -48,6 +48,7 @@ class WebApi(object):
                 params=uri_params,
                 json=raw_data,
                 timeout=10)
+            print(res.data)
             data = res.json()
             if data['ret'] == 0:
                 logging.error("Error data:%s" % (res.text))
