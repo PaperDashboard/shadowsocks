@@ -22,6 +22,7 @@ class WebApi(object):
                 params=uri_params,
                 timeout=10)
             data = res.json()
+            print(res.data)
             
             if data['ret'] == 0:
                 logging.error("Error data:%s" % (res.text))
