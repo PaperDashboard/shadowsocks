@@ -1,4 +1,4 @@
-urllib3==1.20
+urllib3==1.24.2
 cymysql==0.8.9
 requests==2.13.0
 pyOpenSSL==16.2.0
